@@ -25,14 +25,18 @@ class MultisourceDriver implements UserProvider
     protected $enabledSources;
 
     /**
-     * Contructor.
+     * Contructor. Initializes variables and loads the enabled sources
+     * using the configuration file.
      *
      * @param [type] $model [description]
      */
-    public function __construct($model, $enabledSources)
+    public function __construct($model)
     {
+        //this is the model name
         $this->model = $model;
-        $this->enabledSources = $enabledSources;
+
+        //Now we process the configuration and initialize the correct sources
+        $this->enabledSources = new An3\Multisource\SourceFactory();
     }
 
     /**

@@ -7,7 +7,10 @@ namespace An3\Multisource\Sources;
  */
 class LDAPSource implements BaseSource
 {
-    public function __construct()
+    /**
+     * Constructor.
+     */
+    public function __construct($ldap)
     {
         # code...
     }
