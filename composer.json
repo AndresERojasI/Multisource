@@ -1,0 +1,24 @@
+{
+  "name": "an3/multisource",
+  "description": "A Laravel 5.x package to extend the Eloquent Authentication Driver and support multiple login sources",
+  "type": "laravel-package",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Andres Rojas",
+      "email": "andres.rojas.isaza@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "An3\\": "src/An3/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "An3\\": "src/An3/"
+    }
+  }
+}
