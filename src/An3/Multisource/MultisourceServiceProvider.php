@@ -7,13 +7,26 @@ use Illuminate\Support\ServiceProvider;
 class MultisourceServiceProvider extends ServiceProvider
 {
     /**
+     * [$enabledSources description].
+     *
+     * @var [type]
+     */
+    private $enabledSources;
+
+    /**
      * Bootstrap the application events.
      */
     public function boot()
     {
-        Auth::extend('multilogin', function ($app) {
-            return new AuthProvider($app['hash'], $app['config']->get('auth.model'));
+        //Registers the new Auth Provider
+        \Auth::extend('multilogin', function ($app) {
+            return new MultisourceDriver($app['config']->get('auth.model'));
         });
+
+        //Enables the config copy from the Base Config File
+        $this->publishes([
+            __DIR__.DIRECTORY_SEPARATOR.'Config'.DIRECTORY_SEPARATOR.'multisource.php' => config_path('multisource.php'),
+        ]);
     }
 
     /**

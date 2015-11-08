@@ -10,7 +10,10 @@
     }
   ],
   "minimum-stability": "dev",
-  "require": {},
+  "require": {
+  	"adldap2/adldap2": "5.0.*",
+  	"an3/laravel-couchdb" : "1.0.7"
+  },
   "autoload": {
     "psr-4": {
       "An3\\": "src/An3/"
