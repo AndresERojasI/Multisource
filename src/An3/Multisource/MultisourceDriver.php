@@ -26,17 +26,15 @@ class MultisourceDriver implements UserProvider
 
     /**
      * Contructor. Initializes variables and loads the enabled sources
-     * using the configuration file.
-     *
-     * @param [type] $model [description]
+     * using the source factory.
      */
-    public function __construct($model)
+    public function __construct()
     {
         //this is the model name
-        $this->model = $model;
+        $this->model = \Config::get('auth.model');
 
         //Now we process the configuration and initialize the correct sources
-        $this->enabledSources = new An3\Multisource\SourceFactory();
+        $this->enabledSources = SourceFactory::buildSources($this->model);
     }
 
     /**

@@ -7,8 +7,20 @@ namespace An3\Multisource\Sources;
  */
 class CouchDBSource implements BaseSource
 {
-    public function __construct()
+    /**
+     * Futonquent Model.
+     *
+     * @var Futonquent user model
+     */
+    private $model;
+
+    /**
+     * Constructor.
+     *
+     * @param [type] $model [description]
+     */
+    public function __construct($model)
     {
-        # code...
+        $this->model = $model;
     }
 }

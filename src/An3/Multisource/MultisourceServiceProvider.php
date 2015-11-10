@@ -20,7 +20,7 @@ class MultisourceServiceProvider extends ServiceProvider
     {
         //Registers the new Auth Provider
         \Auth::extend('multilogin', function ($app) {
-            return new MultisourceDriver($app['config']->get('auth.model'));
+            return new MultisourceDriver();
         });
 
         //Enables the config copy from the Base Config File

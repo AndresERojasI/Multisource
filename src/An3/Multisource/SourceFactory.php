@@ -15,16 +15,16 @@ class SourceFactory
      *
      * @return [type] [description]
      */
-    public static function buildSources()
+    public static function buildSources($model)
     {
         //this list should be updated if a new source is added
         $availableSources = ['ldap', 'couchdb'];
 
         //Now we load the selected sources from the config file
-        $config = __DIR__.DIRECTORY_SEPARATOR.'Config'.DIRECTORY_SEPARATOR.'multisource.php';
-
+        $config = require_once __DIR__.DIRECTORY_SEPARATOR.'Config'.DIRECTORY_SEPARATOR.'multisource.php';
         //Now we load the user configuration
         $userConfig = \Config::get('multisource');
+
         if ($userConfig) {
             $config = array_replace_recursive($config, $userConfig);
         }
@@ -44,9 +44,24 @@ class SourceFactory
 
     public static function ldapSource($config)
     {
+        //let's call the LDAP Library
+        $ldap = new \Adldap\Adldap($config);
+
+        //now we inject the Adldap LDAP instance into the source and return it
+        return new Sources\LDAPSource($ldap);
     }
 
     public static function couchDBSource($config)
     {
+        //Obtain the Auth Model from the Auth configuration file
+        $modelName = '\\'.ltrim(\Config::get('auth.model'), '\\');
+
+        //Remove the enabled part, that's just for another reason.
+        if (isset($config['enabled'])) {
+            unset($config['enabled']);
+        }
+
+        //Return the new object injecting the model
+        return new Sources\CouchDBSource(new $modelName());
     }
 }
