@@ -20,14 +20,8 @@ class SourceFactory
         //this list should be updated if a new source is added
         $availableSources = ['ldap', 'couchdb'];
 
-        //Now we load the selected sources from the config file
-        $config = require_once __DIR__.DIRECTORY_SEPARATOR.'Config'.DIRECTORY_SEPARATOR.'multisource.php';
-        //Now we load the user configuration
-        $userConfig = \Config::get('multisource');
-
-        if ($userConfig) {
-            $config = array_replace_recursive($config, $userConfig);
-        }
+        //Now we load the package config
+        $config = self::generateConfiguration();
 
         $enabledSources = [];
 
@@ -42,6 +36,32 @@ class SourceFactory
         return $enabledSources;
     }
 
+    /**
+     * [generateConfiguration description].
+     *
+     * @return [type] [description]
+     */
+    public static function generateConfiguration()
+    {
+        //Now we load the selected sources from the config file
+        $config = require __DIR__.DIRECTORY_SEPARATOR.'Config'.DIRECTORY_SEPARATOR.'multisource.php';
+        //Now we load the user configuration
+        $userConfig = \Config::get('multisource');
+
+        if ($userConfig && is_array($config) && is_array($userConfig)) {
+            $config = array_replace_recursive($config, $userConfig);
+        }
+
+        return $config;
+    }
+
+    /**
+     * Loads the LDAP Source into the array.
+     *
+     * @param array $config configuration
+     *
+     * @return Sources\LDAPSource LDAP Source
+     */
     public static function ldapSource($config)
     {
         //let's call the LDAP Library
@@ -51,6 +71,13 @@ class SourceFactory
         return new Sources\LDAPSource($ldap);
     }
 
+    /**
+     * Loads the CouchDB Source into the array.
+     *
+     * @param [type] $config [description]
+     *
+     * @return [type] [description]
+     */
     public static function couchDBSource($config)
     {
         //Obtain the Auth Model from the Auth configuration file
@@ -62,6 +89,6 @@ class SourceFactory
         }
 
         //Return the new object injecting the model
-        return new Sources\CouchDBSource(new $modelName());
+        return new Sources\CouchDBSource(new $modelName(), $config);
     }
 }

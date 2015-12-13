@@ -8,4 +8,8 @@ namespace An3\Multisource\Sources;
  */
 interface BaseSource
 {
+    public function findById($identifier);
+    public function findByCredentials($user, array $credentials);
+    public function updateRememberToken($user, $token);
+    public function validateCredentials($user, array $credentials);
 }

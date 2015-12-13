@@ -25,74 +25,157 @@ class MultisourceDriver implements UserProvider
     protected $enabledSources;
 
     /**
+     * configuration array.
+     *
+     * @var array
+     */
+    protected $configuration;
+
+    /**
      * Contructor. Initializes variables and loads the enabled sources
      * using the source factory.
      */
-    public function __construct()
+    public function __construct($configuration)
     {
-        //this is the model name
-        $this->model = \Config::get('auth.model');
+        //Load the configuration
+        $this->configuration = $configuration;
+
+        //first we create the model
+        $this->model = $this->createModel(\Config::get('auth.model'));
 
         //Now we process the configuration and initialize the correct sources
         $this->enabledSources = SourceFactory::buildSources($this->model);
     }
 
     /**
-     * [retrieveById description].
+     * Retrieve a user by their unique identifier.
      *
-     * @param [type] $identifier [description]
+     * @param mixed $identifier
      *
-     * @return [type] [description]
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
     public function retrieveById($identifier)
     {
+        //first we find the user in the database
+        $user = $this->model->find($identifier);
+
+        //now we find the user auth type
+        if (!is_null($user) && isset($this->enabledSources[$user->auth_type])) {
+            if ($this->enabledSources[$user->auth_type]->findById($identifier) !== null) {
+                return $user;
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
     }
 
     /**
-     * [retrieveByToken description].
+     * Retrieve a user by their unique identifier and "remember me" token.
      *
-     * @param [type] $identifier [description]
-     * @param [type] $token      [description]
+     * @param mixed  $identifier
+     * @param string $token
      *
-     * @return [type] [description]
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
     public function retrieveByToken($identifier, $token)
     {
+        //first we find the user in the database
+        $user = $this->model->find($identifier);
+
+        //let's validate the token
+        if (!is_null($user) && $user->getRememberToken() === $token) {
+            //now we find the user auth type
+            if (isset($this->enabledSources[$user->auth_type])) {
+                if ($this->enabledSources[$user->auth_type]->findByCredentials($user) !== null) {
+                    return $user;
+                } else {
+                    return;
+                }
+            }
+        }
+
+        return;
     }
 
     /**
-     * [updateRememberToken description].
+     * Update the "remember me" token for the given user in storage.
      *
-     * @param UserContract $user  [description]
-     * @param [type]       $token [description]
-     *
-     * @return [type] [description]
+     * @param \Illuminate\Contracts\Auth\Authenticatable $user
+     * @param string                                     $token
      */
     public function updateRememberToken(UserContract $user, $token)
     {
+        $rememberTokenField = $user->getRememberTokenName();
+        $attributes[$rememberTokenField] = $token;
+
+        return $user->update($attributes);
     }
 
     /**
-     * [retrieveByCredentials description].
+     * Retrieve a user by the given credentials.
      *
-     * @param array $credentials [description]
+     * @param array $credentials
      *
-     * @return [type] [description]
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
     public function retrieveByCredentials(array $credentials)
     {
+        //first we find the user in the database
+        if (!isset($this->configuration['username_field'])) {
+            return;
+        }
+
+        $user = $this->model->where(
+            [$this->configuration['username_field'] => $credentials[$this->configuration['username_field']]]
+        )->first();
+
+        //let's validate the token
+        if (!is_null($user) &&
+            $credentials[$this->configuration['password_field']] === \Crypt::decrypt($user->{$this->configuration['password_field']})) {
+            //now we find the user auth type
+            if (isset($this->enabledSources[$user->auth_type])) {
+                if ($this->enabledSources[$user->auth_type]->findByCredentials($user, $credentials) !== null) {
+                    return $user;
+                } else {
+                    return;
+                }
+            }
+        }
+
+        return;
     }
 
     /**
-     * [validateCredentials description].
+     * Validate a user against the given credentials.
      *
-     * @param UserContract $user        [description]
-     * @param array        $credentials [description]
+     * @param \Illuminate\Contracts\Auth\Authenticatable $user
+     * @param array                                      $credentials
      *
-     * @return [type] [description]
+     * @return bool
      */
     public function validateCredentials(UserContract $user, array $credentials)
     {
+        //first we find the user in the database
+        if (!isset($this->configuration['username_field'])) {
+            return;
+        }
+
+        //let's validate the token
+        if (!is_null($user) &&
+            $credentials[$this->configuration['password_field']] === \Crypt::decrypt($user->{$this->configuration['password_field']})) {
+            //now we find the user auth type
+            if (isset($this->enabledSources[$user->auth_type])) {
+                if ($this->enabledSources[$user->auth_type]->findByCredentials($user, $credentials) !== null) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -100,9 +183,9 @@ class MultisourceDriver implements UserProvider
      *
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public function createModel()
+    public function createModel($modelName)
     {
-        $class = '\\'.ltrim($this->model, '\\');
+        $class = '\\'.ltrim($modelName, '\\');
 
         return new $class();
     }
