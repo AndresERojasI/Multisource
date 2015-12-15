@@ -12,7 +12,7 @@
   "minimum-stability": "dev",
   "require": {
   	"adldap2/adldap2": "5.0.*",
-  	"an3/laravel-couchdb" : "1.0.7"
+  	"an3/laravel-couchdb" : "1.0.8"
   },
   "autoload": {
     "psr-4": {
